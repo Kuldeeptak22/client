@@ -13,7 +13,8 @@ import CloseIcon from "@mui/icons-material/Close";
 
 const EditProperty = () => {
   const { propertyId } = useParams();
-  const inputFile = useRef(null);
+  const inputThumbnailFile = useRef(null);
+  const inputImageFile = useRef(null);
   const [fetchedSingleData, setFetchedSingleData] = useState({});
   const navigate = useNavigate();
   const [thumbnail, setThumbnail] = useState("");
@@ -30,14 +31,14 @@ const EditProperty = () => {
 
   const removeThumbnail = () => {
     setThumbnail(null);
-    if (inputFile.current.children[1].children.thumbnail.value) {
-      inputFile.current.children[1].children.thumbnail.value = "";
+    if (inputThumbnailFile.current.children[1].children.thumbnail.value) {
+      inputThumbnailFile.current.children[1].children.thumbnail.value = "";
     }
   };
   const removeImages = () => {
     setImages([]);
-    if (inputFile.current.children[1].children.images.value) {
-      inputFile.current.children[1].children.images.value = "";
+    if (inputImageFile.current.children[1].children.images.value) {
+      inputImageFile.current.children[1].children.images.value = "";
     }
   };
 
@@ -179,7 +180,7 @@ const EditProperty = () => {
               onChange={(e) => {
                 setThumbnail(e.target.files[0]);
               }}
-              ref={inputFile}
+              ref={inputThumbnailFile}
               required
             />
           </Box>
@@ -260,7 +261,7 @@ const EditProperty = () => {
               InputLabelProps={{
                 shrink: true,
               }}
-              ref={inputFile}
+              ref={inputImageFile}
               inputProps={{
                 multiple: true,
               }}
