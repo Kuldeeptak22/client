@@ -30,7 +30,7 @@ const EditProperty = () => {
 
   const removeThumbnail = () => {
     setThumbnail(null);
-    if (inputFile.current.children[1].children.thumbnail?.value) {
+    if (inputFile.current.children[1].children.thumbnail.value) {
       inputFile.current.children[1].children.thumbnail.value = "";
     }
   };
