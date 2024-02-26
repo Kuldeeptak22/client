@@ -18,12 +18,16 @@ const AddProperty = () => {
     initialValues: {
       name: "",
       address: "",
+      thumbnail: null,
+      images: [],
     },
     validationSchema: Yup.object({
       name: Yup.string()
         .required("Name Required")
         .min(3, "Enter at least 3 or more characters"),
       address: Yup.string().required("Address Required"),
+      thumbnail: Yup.mixed().required("Thumbnail Required"),
+      images: Yup.mixed().required("Images Required"),
     }),
     onSubmit: (values) => {
       const formData = new FormData();
@@ -58,6 +62,36 @@ const AddProperty = () => {
   });
   const { handleChange, handleBlur, handleSubmit, values, touched, errors } =
     formik;
+
+  // ======================================================
+
+  const MAX_FILE_SIZE = 102400; //100KB
+
+  const validFileExtensions = {
+    image: ["jpg", "gif", "png", "jpeg", "svg", "webp"],
+  };
+
+  function isValidFileType(fileName, fileType) {
+    return (
+      fileName &&
+      validFileExtensions[fileType].indexOf(fileName.split(".").pop()) > -1
+    );
+  }
+
+  Yup.object().shape({
+    image: Yup.mixed()
+      .required("Required")
+      .test("is-valid-type", "Not a valid image type", (value) =>
+        isValidFileType(value && value.name.toLowerCase(), "image")
+      )
+      .test(
+        "is-valid-size",
+        "Max allowed size is 100KB",
+        (value) => value && value.size <= MAX_FILE_SIZE
+      ),
+  });
+
+  // ======================================================
   return (
     <Container fluid>
       <h1 className="text-2xl font-bold my-3">Add Property</h1>
@@ -130,8 +164,13 @@ const AddProperty = () => {
               onChange={(e) => {
                 setThumbnail(e.target.files[0]);
               }}
-              required
             />
+            <br />
+            {touched.thumbnail && errors.thumbnail ? (
+              <span className="text-red-600 text-right">
+                {errors.thumbnail}
+              </span>
+            ) : null}
           </Box>
 
           {/* Images Field  */}
@@ -159,8 +198,11 @@ const AddProperty = () => {
               inputProps={{
                 multiple: true,
               }}
-              required
             />
+            <br />
+            {touched.images && errors.images ? (
+              <span className="text-red-600 text-right">{errors.images}</span>
+            ) : null}
           </Box>
 
           <Button type="submit" variant="contained">

@@ -67,6 +67,7 @@ const EditProperty = () => {
         .required("Name Required")
         .min(3, "Enter at least 3 or more characters"),
       address: Yup.string().required("Address Required"),
+      thumbnail:Yup.mixed().required("Thumbnail Required"),
     }),
     onSubmit: (values) => {
       const formData = new FormData();
