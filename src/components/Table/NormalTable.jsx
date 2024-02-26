@@ -19,11 +19,54 @@ import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useTheme } from "@mui/material/styles";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
+// ============= Delete Model ===================
+const DeleteModal = ({
+  deleteProperty,
+  fullScreen,
+  open,
+  handleClose,
+  itemId,
+}) => {
+  return (
+    <Dialog
+      fullScreen={fullScreen}
+      open={open}
+      onClose={handleClose}
+      aria-labelledby="responsive-dialog-title"
+    >
+      <DialogTitle id="responsive-dialog-title">
+        {"Delete This Property Entry."}
+      </DialogTitle>
+      <DialogContent>
+        <DialogContentText>Are you Sure ?</DialogContentText>
+      </DialogContent>
+      <DialogActions>
+        <Button autoFocus onClick={handleClose}>
+          Disagree
+        </Button>
+        <Button
+          onClick={() => {
+            deleteProperty(itemId);
+            handleClose();
+          }}
+          autoFocus
+        >
+          Agree
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+};
+
+// =============== Normal Table ================
 const NormalTable = () => {
   const navigate = useNavigate();
   const [loader, setLoader] = useState(false);
   const [fetchedData, setFetchedData] = useState([]);
+
   const fetchData = async () => {
     try {
       const { data } = await Instance.get(`/properties/get_properties`);
@@ -50,9 +93,13 @@ const NormalTable = () => {
   const deleteProperty = async (id) => {
     try {
       setOpen(true);
-      // await Instance.delete(`/properties/delete_property/${id}`);
-      // let filterData = fetchedData.filter((a) => a._id !== id);
-      // setFetchedData(filterData); // Update state after successful delete
+      const { data } = await Instance.delete(
+        `/properties/delete_property/${id}`
+      );
+      const notify = () => toast.success(data?.message);
+      notify();
+      let filterData = fetchedData.filter((a) => a._id !== id);
+      setFetchedData(filterData); // Update state after successful delete
     } catch (error) {
       console.log(error);
     }
@@ -62,9 +109,9 @@ const NormalTable = () => {
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down("md"));
 
-  // const handleClickOpen = () => {
-  //   setOpen(true);
-  // };
+  const handleClickOpen = () => {
+    setOpen(true);
+  };
 
   const handleClose = () => {
     setOpen(false);
@@ -162,13 +209,20 @@ const NormalTable = () => {
                       </Button>
 
                       <Button
-                        onClick={() => deleteProperty(item._id)}
+                        onClick={handleClickOpen}
                         variant="contained"
                         color="error"
                       >
                         Delete
                       </Button>
                     </TableCell>
+                    <DeleteModal
+                      deleteProperty={deleteProperty}
+                      itemId={item._id}
+                      fullScreen={fullScreen}
+                      open={open}
+                      handleClose={handleClose}
+                    />
                   </TableRow>
                 ))}
             </TableBody>
@@ -176,46 +230,22 @@ const NormalTable = () => {
         ) : (
           <Box
             sx={{
-              position: "fixed",
-              top: 0,
-              left: 0,
               width: "100%",
               height: "100%",
               display: "flex",
               justifyContent: "center",
               alignItems: "center",
+              fontSize: "4rem",
               backgroundColor: "rgba(0, 0, 0, 0.5)",
-              zIndex: 9999,
+
+              // zIndex: 9999,
             }}
           >
-            <CircularProgress color="inherit" />
+            <p>No Data available!</p>
           </Box>
         )}
       </TableContainer>
-      {/* ============================== */}
-      <>
-        <Dialog
-          fullScreen={fullScreen}
-          open={open}
-          onClose={handleClose}
-          aria-labelledby="responsive-dialog-title"
-        >
-          <DialogTitle id="responsive-dialog-title">
-            {"Delete This Property Entry."}
-          </DialogTitle>
-          <DialogContent>
-            <DialogContentText>Are you Sure ?</DialogContentText>
-          </DialogContent>
-          <DialogActions>
-            <Button autoFocus onClick={handleClose}>
-              Disagree
-            </Button>
-            <Button onClick={handleClose} autoFocus>
-              Agree
-            </Button>
-          </DialogActions>
-        </Dialog>
-      </>
+      <ToastContainer />
     </>
   );
 };

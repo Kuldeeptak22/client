@@ -1,20 +1,22 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
-import { Instance } from "../../utils/Instance";
+import { BaseURL, Instance } from "../../utils/Instance";
 import Box from "@mui/material/Box";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useNavigate, useParams } from "react-router-dom";
 import { Container, Row } from "react-bootstrap";
+import CloseIcon from "@mui/icons-material/Close";
 
 const EditProperty = () => {
   const { propertyId } = useParams();
+  const inputFile = useRef(null);
   const [fetchedSingleData, setFetchedSingleData] = useState({});
   const navigate = useNavigate();
-  const [thumbnail, setThumbnail] = useState(null);
+  const [thumbnail, setThumbnail] = useState("");
   const [images, setImages] = useState([]);
 
   const fetchSingleData = async (id) => {
@@ -23,6 +25,19 @@ const EditProperty = () => {
       setFetchedSingleData(data.data);
     } catch (error) {
       console.log(error);
+    }
+  };
+
+  const removeThumbnail = () => {
+    setThumbnail(null);
+    if (inputFile.current.children[1].children.thumbnail?.value) {
+      inputFile.current.children[1].children.thumbnail.value = "";
+    }
+  };
+  const removeImages = () => {
+    setImages([]);
+    if (inputFile.current.children[1].children.images.value) {
+      inputFile.current.children[1].children.images.value = "";
     }
   };
 
@@ -62,7 +77,10 @@ const EditProperty = () => {
         formData.append("images", images[i]);
       }
 
-      const response = Instance.post(`properties/add_property`, formData);
+      const response = Instance.put(
+        `/properties/update_property/${propertyId}`,
+        formData
+      );
       response
         .then((res) => {
           if (res?.status === 201) {
@@ -103,7 +121,7 @@ const EditProperty = () => {
               variant="standard"
               onChange={handleChange}
               onBlur={handleBlur}
-              value={values.name}
+              value={values?.name ?? ""}
               InputLabelProps={{
                 shrink: true,
               }}
@@ -129,7 +147,7 @@ const EditProperty = () => {
               variant="standard"
               onChange={handleChange}
               onBlur={handleBlur}
-              value={values.address}
+              value={values?.address ?? ""}
               InputLabelProps={{
                 shrink: true,
               }}
@@ -139,6 +157,7 @@ const EditProperty = () => {
               <span className="text-red-600 text-right">{errors.address}</span>
             ) : null}
           </Box>
+
           {/* Thumbnail Field  */}
           <Box
             sx={{
@@ -160,9 +179,63 @@ const EditProperty = () => {
               onChange={(e) => {
                 setThumbnail(e.target.files[0]);
               }}
+              ref={inputFile}
               required
             />
           </Box>
+
+          {/* Selected Thumbnail show  */}
+          {thumbnail && (
+            <>
+              <p className="font-semibold">Selected Image</p>
+              <div
+                className="flex justify-content-center relative"
+                style={{ maxWidth: "fit-content", margin: "12px auto" }}
+              >
+                <CloseIcon
+                  onClick={removeThumbnail}
+                  sx={{
+                    position: "absolute",
+                    right: "-5px",
+                    top: "-5px",
+                    border: "1px solid red",
+                    borderRadius: "50%",
+                    background: "gray",
+                    cursor: "pointer",
+                  }}
+                />
+                <img
+                  src={URL.createObjectURL(thumbnail)} // Assuming the image is a URL, modify accordingly
+                  alt={`Fetched Image `}
+                  style={{
+                    maxWidth: "70px",
+                    margin: "5px",
+                    border: "1px solid gray",
+                    padding: "2px",
+                  }}
+                />
+              </div>
+            </>
+          )}
+          {/* Previous Thumbnail show  */}
+          {fetchedSingleData.thumbnail && (
+            <>
+              <p className="mt-4 font-semibold text-gray-400">Previous Image</p>
+              <div className="flex justify-content-center">
+                <img
+                  src={`${BaseURL}/uploads/properties/${fetchedSingleData.thumbnail}`} // Assuming the image is a URL, modify accordingly
+                  alt={`Fetched Image `}
+                  style={{
+                    maxWidth: "70px",
+                    margin: "5px",
+                    border: "1px solid gray",
+                    padding: "2px",
+                    opacity: "0.7",
+                  }}
+                />
+              </div>
+            </>
+          )}
 
           {/* Images Field  */}
           <Box
@@ -179,13 +252,15 @@ const EditProperty = () => {
               variant="outlined"
               name="images"
               onChange={(e) => {
-                setImages(e.target.files);
+                setImages([...e.target.files]);
               }}
+              // value={images}
               onBlur={handleBlur}
               multiple
               InputLabelProps={{
                 shrink: true,
               }}
+              ref={inputFile}
               inputProps={{
                 multiple: true,
               }}
@@ -193,8 +268,82 @@ const EditProperty = () => {
             />
           </Box>
 
-          <Button type="submit" variant="contained">
-            Edit Property
+          {/* Selected Images show  */}
+          {images && images.length > 0 && (
+            <div
+              className="relative"
+              style={{ maxWidth: "fit-content", margin: "12px auto" }}
+            >
+              <p className="font-semibold">Selected Images</p>
+              <CloseIcon
+                onClick={removeImages}
+                sx={{
+                  position: "absolute",
+                  right: "-10px",
+                  top: "25px",
+                  border: "1px solid red",
+                  borderRadius: "50%",
+                  background: "gray",
+                  cursor: "pointer",
+                }}
+              />
+              <div
+                className="flex justify-content-center"
+                style={{
+                  border: "1px solid green",
+                  maxWidth: "fit-content",
+                  margin: "12px auto",
+                }}
+              >
+                <div style={{ display: "flex" }}>
+                  {images &&
+                    images?.map((image, index) => (
+                      <img
+                        key={index}
+                        src={URL.createObjectURL(image)} // Assuming the image is a URL, modify accordingly
+                        alt={`Fetched Image ${index + 1}`}
+                        style={{
+                          maxWidth: "60px",
+                          margin: "5px",
+                          border: "1px solid gray",
+                          padding: "2px",
+                        }}
+                      />
+                    ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Images show  */}
+          {fetchedSingleData.images && fetchedSingleData.images.length > 0 && (
+            <>
+              <p className="font-semibold mt-4 text-gray-400">
+                Privious Images
+              </p>
+              <div className="flex justify-content-center">
+                <div style={{ display: "flex" }}>
+                  {fetchedSingleData.images.map((image, index) => (
+                    <img
+                      key={index}
+                      src={`${BaseURL}/uploads/properties/${image}`} // Assuming the image is a URL, modify accordingly
+                      alt={`Fetched Image ${index + 1}`}
+                      style={{
+                        maxWidth: "50px",
+                        margin: "5px",
+                        border: "1px solid gray",
+                        padding: "2px",
+                        opacity: "0.7",
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
+
+          <Button type="submit" variant="contained" sx={{ margin: "5rem 2px" }}>
+            Save Property
           </Button>
           <ToastContainer />
         </form>
